@@ -6,6 +6,7 @@ import ToastIcon from './ToastIcon';
 import ToastManager from './ToastManager';
 import ToastMessage from './ToastMessage';
 import ToastTransition from './ToastTransition';
+import ToastTransitionGroup from './ToastTransitionGroup';
 import useToastManager from './useToastManager';
 
 export {
@@ -17,5 +18,6 @@ export {
   ToastManager,
   ToastMessage,
   ToastTransition,
+  ToastTransitionGroup,
   useToastManager,
 };

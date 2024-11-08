@@ -242,6 +242,7 @@ test('should match expected exports', () => {
     'ToastManager',
     'ToastMessage',
     'ToastTransition',
+    'ToastTransitionGroup',
     'useToastManager',
 
     // tooltip
