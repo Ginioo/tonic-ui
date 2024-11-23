@@ -1,8 +1,10 @@
+import { runInNewContext } from 'node:vm';
 import {
   ariaAttr,
   callAll,
   callEventHandlers,
   dataAttr,
+  merge,
   noop,
   once,
   runIfFn,
@@ -14,19 +16,14 @@ afterEach(() => {
   jest.resetAllMocks();
 });
 
-describe('ariaAttr / dataAttr', () => {
-  it('should render correct aria-* and data-* attributes', () => {
-    const ariaProps = {
+describe('ariaAttr', () => {
+  it('should render correct aria-* attributes', () => {
+    const ariaAttrs = {
       'aria-disabled': ariaAttr(true),
-      'data-disabled': dataAttr(true),
       'aria-selected': ariaAttr(false),
-      'data-selected': dataAttr(false),
     };
-
-    expect(ariaProps['aria-disabled']).toBe(true);
-    expect(ariaProps['data-disabled']).toBe('');
-    expect(ariaProps['aria-selected']).toBe(undefined);
-    expect(ariaProps['data-selected']).toBe(undefined);
+    expect(ariaAttrs['aria-disabled']).toBe(true);
+    expect(ariaAttrs['aria-selected']).toBe(undefined);
   });
 });
 
@@ -75,6 +72,185 @@ describe('callEventHandlers', () => {
     expect(fn1).toHaveBeenCalled();
     expect(fn2).toHaveBeenCalled();
     expect(fn3).not.toHaveBeenCalled();
+  });
+});
+
+describe('dataAttr', () => {
+  it('should render correct data-* attributes', () => {
+    const dataAttrs = {
+      'data-disabled': dataAttr(true),
+      'data-selected': dataAttr(false),
+    };
+    expect(dataAttrs['data-disabled']).toBe('');
+    expect(dataAttrs['data-selected']).toBe(undefined);
+  });
+});
+
+describe('merge', () => {
+  it('should replace the first array with the second array', () => {
+    // Second array fully replaces the first array
+    expect(merge(
+      [1, 2],
+      [3, 4, 5],
+    )).toEqual([3, 4, 5]);
+
+    // Second array replaces corresponding elements of the first array, leaving trailing elements
+    expect(merge(
+      [1, 2, 3],
+      [4, 5],
+    )).toEqual([4, 5, 3]);
+  });
+
+  it('should merge objects and replace array values correctly', () => {
+    const result = merge(
+      { arr: [1, 2, { a: 1 }] },
+      { arr: [3, 4, { b: 2 }] }
+    );
+    expect(result).toEqual({
+      arr: [3, 4, { b: 2 }]
+    });
+  });
+
+  it('should merge arrays within nested structures', () => {
+    const result = merge(
+      { arr: [1, [2, 3], { a: [1, 2] }] },
+      { arr: [4, [5, 6], { a: [3, 4] }] }
+    );
+    expect(result).toEqual({
+      arr: [4, [5, 6], { a: [3, 4] }]
+    });
+  });
+
+  it('should handle arrays with objects correctly', () => {
+    const target = {
+      items: [
+        { id: 1, value: 'old' },
+        { id: 2, nested: { prop: 'old' } }
+      ]
+    };
+    const source = {
+      items: [
+        { id: 1, value: 'new' },
+        { id: 2, nested: { prop: 'new' } }
+      ]
+    };
+    const result = merge(target, source);
+    expect(result.items[0].value).toBe('new');
+    expect(result.items[1].nested.prop).toBe('new');
+  });
+
+  it('should handle array mutation correctly with clone option', () => {
+    const target = { arr: [1, { a: 1 }] };
+    const source = { arr: [2, { b: 2 }] };
+    const result = merge(target, source, { clone: true });
+    result.arr[1].b = 3;
+    expect(source.arr[1].b).toBe(2);
+    expect(result.arr[1].b).toBe(3);
+  });
+
+  it('should handle circular references in arrays', () => {
+    const target = { arr: [] };
+    target.arr.push(target);
+    const source = { arr: [{ value: 'test' }] };
+    const result = merge(target, source);
+    expect(result.arr[0].value).toBe('test');
+  });
+
+  it('should not be subject to prototype pollution via __proto__', () => {
+    const result = merge(
+      {},
+      JSON.parse('{ "myProperty": "a", "__proto__" : { "isAdmin" : true } }'),
+      {
+        clone: false,
+      }
+    );
+    expect(result.__proto__).toHaveProperty('isAdmin'); // eslint-disable-line no-proto
+    expect({}).not.toHaveProperty('isAdmin');
+  });
+
+  it('should not be subject to prototype pollution via constructor', () => {
+    const result = merge(
+      {},
+      JSON.parse('{ "myProperty": "a", "constructor" : { "prototype": { "isAdmin" : true } } }'),
+      {
+        clone: true,
+      }
+    );
+    expect(result.constructor.prototype).toHaveProperty('isAdmin');
+    expect({}).not.toHaveProperty('isAdmin');
+  });
+
+  it('should not be subject to prototype pollution via prototype', () => {
+    const result = merge(
+      {},
+      JSON.parse('{ "myProperty": "a", "prototype": { "isAdmin" : true } }'),
+      {
+        clone: false,
+      }
+    );
+    expect(result.prototype).toHaveProperty('isAdmin');
+    expect({}).not.toHaveProperty('isAdmin');
+  });
+
+  it('should appropriately copy the fields without prototype pollution', () => {
+    const result = merge(
+      {},
+      JSON.parse('{ "myProperty": "a", "__proto__" : { "isAdmin" : true } }')
+    );
+    expect(result.__proto__).toHaveProperty('isAdmin'); // eslint-disable-line no-proto
+    expect({}).not.toHaveProperty('isAdmin');
+  });
+
+  it('should merge objects across realms', function test() {
+    if (!/jsdom/.test(window.navigator.userAgent)) {
+      this.skip();
+    }
+    const vmObject = runInNewContext('({hello: "realm"})');
+    const result = merge({ hello: 'original' }, vmObject);
+    expect(result.hello).toBe('realm');
+  });
+
+  it('should not merge HTML elements', () => {
+    const element = document.createElement('div');
+    const element2 = document.createElement('div');
+
+    const result = merge({ element }, { element: element2 });
+
+    expect(result.element).toBe(element2);
+  });
+
+  it('should reset source when target is undefined', () => {
+    const result = merge(
+      {
+        '&.disabled': {
+          color: 'red',
+        },
+      },
+      {
+        '&.disabled': undefined,
+      }
+    );
+    expect(result).toEqual({
+      '&.disabled': undefined,
+    });
+  });
+
+  it('should merge keys that do not exist in source', () => {
+    const result = merge({ foo: { baz: 'test' } }, { foo: { bar: 'test' }, bar: 'test' });
+    expect(result).toEqual({
+      foo: { baz: 'test', bar: 'test' },
+      bar: 'test',
+    });
+  });
+
+  it('should deep clone source key object if target key does not exist', () => {
+    const foo = { foo: { baz: 'test' } };
+    const bar = {};
+    const result = merge(bar, foo);
+    expect(result).toEqual({ foo: { baz: 'test' } });
+    result.foo.baz = 'new test';
+    expect(result).toEqual({ foo: { baz: 'new test' } });
+    expect(foo).toEqual({ foo: { baz: 'test' } });
   });
 });
 
