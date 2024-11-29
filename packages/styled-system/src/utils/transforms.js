@@ -1,5 +1,5 @@
 import get from './get';
-import toCSSVariable from './toCSSVariable';
+import { toCSSVariable } from './css-vars';
 
 // Check if a value is a simple CSS variable
 // e.g. var(--tonic-spacing-1)
@@ -11,11 +11,10 @@ const isSimpleCSSVariable = (value) => {
 // Negate the value, handling CSS variables and numeric values
 const toNegativeValue = (scale, absoluteValue, options) => {
   const theme = options?.props?.theme;
-  const useCSSVariables = !!(theme?.config?.useCSSVariables); // defaults to false
   const n = getter(scale, absoluteValue, options);
 
   // Handle CSS variables for negative values
-  if (useCSSVariables && isSimpleCSSVariable(n)) {
+  if (!!theme?.cssVariables && isSimpleCSSVariable(n)) {
     // https://stackoverflow.com/questions/49469344/using-negative-css-custom-properties
     return `calc(0px - ${n})`;
   }
@@ -29,12 +28,17 @@ const toNegativeValue = (scale, absoluteValue, options) => {
 };
 
 export const getter = (scale, value, options) => {
-  const theme = options?.props?.theme;
-  const prefix = theme?.config?.prefix; // defaults to 'tonic'
-  const useCSSVariables = !!(theme?.config?.useCSSVariables); // defaults to false
   const result = get(scale, value);
+  if (result === undefined) {
+    return value; // fallback to value if result is undefined
+  }
 
-  if (result !== undefined && useCSSVariables) {
+  const theme = options?.props?.theme;
+  // FIXME: `theme.config.prefix` and `theme.__cssVariableMap` are deprecated and will be removed in the next major release
+  const hasCSSVariables = !!(theme?.cssVariables ?? theme?.__cssVariableMap);
+  if (hasCSSVariables) {
+    const cssVariablePrefix = (theme?.cssVariablePrefix) ?? (theme?.config?.prefix);
+    const cssVariables = (theme?.cssVariables) ?? (theme?.__cssVariableMap);
     const contextScale = options?.context?.scale;
     const cssVariable = toCSSVariable(
       // | contextScale | value     |
@@ -42,17 +46,17 @@ export const getter = (scale, value, options) => {
       // | colors       | 'blue:50' |
       // | space        | 0         |
       [contextScale, String(value ?? '')].filter(Boolean).join('.'), // => 'colors.blue:50'
-      { prefix, delimiter: '-' },
+      { prefix: cssVariablePrefix, delimiter: '-' },
     ); // => '--tonic-colors-blue-50'
-    const cssVariableValue = theme?.__cssVariableMap?.[cssVariable]; // => '#578aef'
+    const cssVariableValue = cssVariables?.[cssVariable]; // => '#578aef'
     if (cssVariableValue !== undefined) {
       // => Replace '#578aef' with 'var(--tonic-colors-blue-50)'
       return String(result ?? '').replaceAll(cssVariableValue, `var(${cssVariable})`);
     }
-    // fallback to the original value
+    // fallback to the original result
   }
 
-  return result ?? value; // fallback to value if result is null or undefined
+  return result;
 };
 
 export const positiveOrNegative = (scale, value, options) => {

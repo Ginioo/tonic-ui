@@ -1,16 +1,18 @@
 import { Global } from '@emotion/react';
-import { ensureArray } from 'ensure-type';
+import { ensurePlainObject } from 'ensure-type';
 import React, { useCallback } from 'react';
 
-const CSSVariables = ({
-  root = [':root', ':host'],
-}) => {
+const CSSVariables = () => {
   const styles = useCallback((theme) => {
-    const selector = ensureArray(root).join(',');
+    const rootSelector = theme?.rootSelector;
+    const cssVariables = ensurePlainObject(theme?.cssVariables);
+    if (!rootSelector || Object.keys(cssVariables) === 0) {
+      return {};
+    }
     return {
-      [selector]: { ...theme?.__cssVariableMap },
+      [rootSelector]: cssVariables,
     };
-  }, [root]);
+  }, []);
 
   return (
     <Global styles={styles} />

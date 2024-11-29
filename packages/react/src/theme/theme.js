@@ -1,13 +1,5 @@
-import originalTheme from '@tonic-ui/theme';
+import createTheme from './createTheme';
 
-const theme = {
-  ...originalTheme,
-  config: {
-    prefix: 'tonic',
-    useCSSVariables: false,
-  },
-  components: {},
-  icons: [],
-};
+const theme = createTheme();
 
 export default theme;

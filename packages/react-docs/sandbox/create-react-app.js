@@ -28,20 +28,18 @@ import {
   ToastManager,
   TonicProvider,
   colorStyle,
-  theme,
+  createTheme,
   useColorMode,
   useColorStyle,
   useTheme,
 } from '@tonic-ui/react';
+import { merge } from '@tonic-ui/utils';
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './app';
 
-const customColorStyle = {
-  ...colorStyle,
+const customColorStyle = merge(colorStyle, {
   dark: {
-    ...colorStyle.dark,
-
     // Add custom colors here
     risk: {
       high: 'red:50',
@@ -58,8 +56,6 @@ const customColorStyle = {
     },
   },
   light: {
-    ...colorStyle.light,
-
     // Add custom colors here
     risk: {
       high: 'red:60',
@@ -75,31 +71,25 @@ const customColorStyle = {
       info: 'gray:50',
     },
   },
-};
+});
 
-const Root = (props) => {
-  const customTheme = {
-    ...theme,
+const customTheme = createTheme({
+  cssVariables: true, // Enable CSS variables replacement
+  components: {
     // Set default props for specific components
     //
     // Example:
-    // \`\`\`js
-    // components: {
-    //   'ToastCloseButton': {
-    //     defaultProps: {
-    //       'aria-label': 'Close toast',
-    //     },
-    //   },
-    // }
     // \`\`\`
-    components: {},
-    // Enable CSS variables
-    config: {
-      ...theme?.config,
-      useCSSVariables: true,
-    },
-  };
+    // 'ToastCloseButton': {
+    //   defaultProps: {
+    //     'aria-label': 'Close toast',
+    //   },
+    // },
+    // \`\`\`
+  },
+});
 
+const Root = (props) => {
   return (
     <TonicProvider
       colorMode={{

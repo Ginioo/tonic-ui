@@ -5,9 +5,7 @@ import React, { useEffect, useRef } from 'react';
 
 describe('Radio', () => {
   it('should render correctly', async () => {
-    const renderOptions = {
-      useCSSVariables: true,
-    };
+    const renderOptions = {};
     const { container } = render((
       <>
         {/* Sizes */}

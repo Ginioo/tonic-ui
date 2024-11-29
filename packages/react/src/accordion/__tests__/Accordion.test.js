@@ -14,9 +14,7 @@ import React from 'react';
 
 describe('Accordion', () => {
   it('should render correctly', async () => {
-    const renderOptions = {
-      useCSSVariables: true,
-    };
+    const renderOptions = {};
     const { container } = render((
       <Accordion rowGap={1}>
         <AccordionItem defaultIsExpanded>

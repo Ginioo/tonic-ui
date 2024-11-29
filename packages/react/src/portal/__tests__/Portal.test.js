@@ -5,9 +5,7 @@ import React from 'react';
 
 describe('Portal', () => {
   it('should render correctly', () => {
-    const renderOptions = {
-      useCSSVariables: true,
-    };
+    const renderOptions = {};
     const { container } = render((
       <Portal>
         This is a portal

@@ -5,9 +5,7 @@ import React from 'react';
 
 describe('Tabs', () => {
   it('should render correctly', async () => {
-    const renderOptions = {
-      useCSSVariables: true,
-    };
+    const renderOptions = {};
     const { container } = render((
       <Tabs>
         <TabList>
