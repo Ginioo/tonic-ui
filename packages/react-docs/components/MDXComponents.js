@@ -1,4 +1,3 @@
-import styled from '@emotion/styled';
 import {
   Box,
   Code,
@@ -16,7 +15,6 @@ import { codeBlockLight, codeBlockDark } from '../prism-themes/tonic-ui';
 
 const ParagraphComponent = props => (
   <Box
-    as="p"
     mt={0}
     mb="4x"
     fontSize="md"
@@ -142,7 +140,7 @@ const H6Component = props => {
   );
 };
 
-const BlockquoteComponent = styled(props => {
+const BlockquoteComponent = props => {
   const [colorMode] = useColorMode();
   const [colorStyle] = useColorStyle({ colorMode });
   const backgroundColor = {
@@ -168,14 +166,16 @@ const BlockquoteComponent = styled(props => {
       mb="4x"
       px="4x"
       py="3x"
+      sx={{
+        // The "ParagraphComponent" was changed to "div" instead of "p"
+        '> div': {
+          marginBottom: 0,
+        },
+      }}
       {...props}
     />
   );
-})`
-  > p {
-    margin-bottom: 0;
-  }
-`;
+};
 
 const UnorderedListComponent = props => (
   <Box

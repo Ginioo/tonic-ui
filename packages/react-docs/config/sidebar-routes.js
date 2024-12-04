@@ -10,6 +10,7 @@ import {
   MigrateSuccessIcon,
   RocketIcon,
   SVGIcon,
+  ToolsConfigurationIcon,
   UserTeamIcon,
   WidgetsIcon,
   WorkspaceIcon,
@@ -33,10 +34,8 @@ export const routes = [
       { title: 'Usage', path: 'getting-started/usage' },
       { title: 'Color Mode', path: 'getting-started/color-mode' },
       { title: 'Color Style', path: 'getting-started/color-style' },
-      { title: 'CSS Variables', path: 'getting-started/css-variables' },
       { title: 'Icons', path: 'getting-started/icons' },
       { title: 'The sx prop', path: 'getting-started/the-sx-prop' },
-      { title: 'Security', path: 'getting-started/security' },
       { title: 'Tonic UI Versions', path: 'getting-started/versions' },
     ],
   },
@@ -59,6 +58,17 @@ export const routes = [
         path: 'contributing/react-components-part-2',
       },
       { title: 'React Icons', path: 'contributing/react-icons' },
+    ],
+  },
+  {
+    title: 'Customization',
+    icon: (props) => (
+      <ToolsConfigurationIcon size="4x" {...props} />
+    ),
+    routes: [
+      { title: 'Content Security Policy', path: 'customization/content-security-policy' },
+      { title: 'CSS Theme Variables', path: 'customization/css-theme-variables' },
+      { title: 'Shadow DOM', path: 'customization/shadow-dom' },
     ],
   },
   {
